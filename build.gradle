@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+}
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Add Burp Suite API dependency
+    compileOnly 'net.portswigger.burp.extender:burp-extender-api:2.3'
+}
+
+jar {
+    // Ensure META-INF/MANIFEST.MF is created with the correct Main-Class
+    manifest {
+        attributes(
+            'Implementation-Title': 'Timeinator',
+            'Implementation-Version': version,
+            'Main-Class': 'burp.BurpExtender'
+        )
+    }
+    
+    // Include all dependencies in the JAR
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    
+    // Exclude signature files from dependencies
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+}
+
+// Create a task to copy the built JAR to a specific directory (optional)
+task copyJarToBurp(type: Copy, dependsOn: jar) {
+    from jar.outputs.files.singleFile
+    // Change this path to match your Burp Suite extensions directory
+    into "${System.getProperty('user.home')}/BurpSuite/extensions"
+} 
